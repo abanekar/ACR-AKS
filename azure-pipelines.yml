@@ -1,0 +1,53 @@
+# Docker
+# Build and push an image to Azure Container Registry
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+- main
+
+resources:
+- repo: self
+
+variables:
+  # Container registry service connection established during pipeline creation
+  dockerRegistryServiceConnection: 'f5b22c90-e17e-4f20-b302-a914ca56644e'
+  imageRepository: 'abanekaracraksexaze'
+  containerRegistry: 'newacraks.azurecr.io'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  tag: '$(Build.BuildId)'
+
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+    # Save image metadata to a file
+    - task: Bash@3
+      displayName: Create image metadata file
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo "ACR Image: $(imageRepository):$(tag)" > imageInfo.txt
+
+    # Publish that file as a pipeline artifact
+    - task: PublishPipelineArtifact@1
+      displayName: Publish image info
+      inputs:
+        targetPath: 'imageInfo.txt'
+        artifactName: 'image-metadata'
