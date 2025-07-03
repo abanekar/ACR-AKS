@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: aksacr 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aksacr
+  template:
+    metadata:
+      labels:
+        app: aksacr 
+    spec:
+      containers:
+        - name: aksacr 
+          image: acrakscontainer.azurecr.io/aksacr
+          ports:
+          - containerPort: 80
